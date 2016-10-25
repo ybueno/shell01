@@ -1,0 +1,67 @@
+#!/bin/bash
+
+PROJETO='hello-world-react'
+WORKING_COPIES=$HOME/devops/$PROJETO
+
+#echo $WORKING_COPIES
+
+#cria todas as pasta ate o nivel necessario
+mkdir -p $WORKING_COPIES
+
+REPO='https://github.com/bortolettot/hello-world-react.git'
+BRANCH='teste'
+DIST='build/*'
+
+deploy(){
+
+	cd $WORKING_COPIES
+
+	echo 'npm install'
+	npm install
+
+	echo 'npm run build'
+	npm run build
+	
+	echo 'Clean apache'
+	sudo rm -rf /var/www/html/*
+
+	echo 'Copiar arquivos'	
+	sudo cp -r $WORKING_COPIES/$DIST /var/www/html/
+
+	#Usar aspas inclinada ` para acessar as funções do linux 
+	echo `date`' - Deployed!'
+	
+}
+
+echo '---------------------INICIO DEPLOY ---------------'
+echo `date`
+echo '--------------------------------------------------'
+
+#! = negação
+#-e = existe
+
+cd $WORKING_COPIES
+
+if [ ! -e $WORKING_COPIES/.gitignore ] ; then
+	#O ponto pede pra baixar o projeto sem criar a pasta com o nome do mesmo
+	git clone $REPO .
+	git checkout $BRANCH
+	git pull
+	deploy
+
+	#Saida da função, igual a return true (0 = sucesso para linux)
+	exit 0		
+fi
+
+#A variavel recebe o retorno do git pull
+RESULT=`git pull`
+CORRETO='Already up-to-date.'  
+
+echo $RESULT
+
+if [ "$RESULT" != "$CORRETO" ] ; then
+	deploy
+fi
+
+echo `date`
+echo '------------------------FIM DEPLOY ----------------'
